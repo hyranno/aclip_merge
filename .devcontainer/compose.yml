@@ -1,0 +1,13 @@
+version: '3'
+services:
+
+  app:
+    image: ubuntu
+    container_name: aclip_merge
+    restart: no
+    volumes:
+      - ..:/workspace:cached
+      - repo:/workspace/
+
+volumes:
+  repo:
