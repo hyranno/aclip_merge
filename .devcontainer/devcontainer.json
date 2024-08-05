@@ -2,7 +2,7 @@
 	"name": "aclip_merge",
 	"dockerComposeFile": "compose.yml",
 	"features": {
-		"ghcr.io/devcontainers/features/git": {},
+		"ghcr.io/devcontainers/features/git": {"version": "stable"},
 		"ghcr.io/devcontainers/features/node": {},
 		"ghcr.io/devcontainers-contrib/features/ffmpeg-apt-get:1": {}
 	},
