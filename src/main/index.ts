@@ -97,7 +97,7 @@ function* tempFileNameGen(roll: number): Generator<string, never, never> {
   }
 }
 let tempDir = mkdtempSync(path.join(tmpdir(), 'aclip_merge-'));
-let tempFileNameIter = tempFileNameGen(3);
+let tempFileNameIter = tempFileNameGen(64);
 function tempFileName(suffix: string): string {
   return path.join(tempDir, tempFileNameIter.next().value + suffix)
 }
