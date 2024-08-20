@@ -15,7 +15,7 @@ type AudioList = {
 }
 
 
-async function main(): Promise<void[]> {
+async function main(): Promise<void> {
   let [,, input, dest] = process.argv;
   if (!dest) {
     console.log("node aclip_merge <inputFile> <destDir>");
@@ -24,21 +24,38 @@ async function main(): Promise<void[]> {
 
   let dir = path.dirname(input);
   let aclips: AudioClip[] = loadClips(input);
+  let zeroBaseFile = path.join(dir, aclips[0].file);
 
-  return Promise.all([...(Map.groupBy(aclips, clip => clip.actor))].map(([actor, clipGroup]) =>
+  return mergeGroupByActor(dir, dest, aclips, zeroBaseFile).reduce((pbase, pclip) =>
+    Promise.all([pbase, pclip]).then(([base, clip]) =>
+      merge("", base, clip)
+    ),
+    zeroAudio(zeroBaseFile)
+  ).then(res =>
+    copyFileSync(res.file, path.join(dest, "all.wav"))
+  )
+}
+
+function mergeGroupByActor(dir: string, dest: string, aclips: AudioClip[], zeroBaseFile: string): Promise<AudioClip>[] {
+  return [...(Map.groupBy(aclips, clip => clip.actor))].map(([actor, clipGroup]) =>
     clipGroup.map(clip =>
       new Promise<AudioClip>((resolve) => resolve(clip))
     ).reduce((pbase, pclip) =>
       Promise.all([pbase, pclip]).then(([base, clip]) =>
         merge(dir, base, clip)
       ),
-      zeroAudio(path.join(dir, aclips[0].file))
-    ).then(res =>
-      copyFileSync(res.file, path.join(dest, res.actor + ".wav"))
-    )
-  ));
+      zeroAudio(zeroBaseFile)
+    ).then(res => {
+      let mergedClip: AudioClip = {
+        actor: res.actor,
+        startAt: 0,
+        file: path.join(dest, res.actor + ".wav"),
+      };
+      copyFileSync(res.file, mergedClip.file);
+      return mergedClip;
+    })
+  )
 }
-
 
 function merge(dir: string, base: AudioClip, clip: AudioClip): Promise<AudioClip> {
   let dest: AudioClip = {
